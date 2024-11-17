@@ -3,6 +3,24 @@ import request from 'supertest';
 import { execSync } from 'node:child_process';
 import { app } from '../src/app';
 
+async function addBook(book: { title: string, genre: string, author: string }) {
+  const createBookResponse = await request(app.server)
+    .post('/books')
+    .send(book);
+
+  const cookies = createBookResponse.get('Set-Cookie') ?? [];
+
+  const listBooksResponse = await request(app.server)
+    .get('/books')
+    .set('Cookie', cookies)
+    .expect(200);
+
+  return {
+    bookId: listBooksResponse.body.books[0].id,
+    cookies,
+  };
+}
+
 describe('Books routes', () => {
   beforeAll(async () => {
     await app.ready();
@@ -13,8 +31,8 @@ describe('Books routes', () => {
   });
 
   beforeEach(() => {
-    execSync('yarn knex migrate:rollback --all');
-    execSync('yarn knex migrate:latest');
+    execSync('npx knex -- migrate:rollback --all');
+    execSync('npx knex -- migrate:latest');
   });
 
   it('should be able to create a new book', async () => {
@@ -35,11 +53,7 @@ describe('Books routes', () => {
         genre: 'Test Genre 2',
       };
 
-      const createBookResponse = await request(app.server)
-        .post('/books')
-        .send(book);
-
-      const cookies = createBookResponse.get('Set-Cookie') ?? [];
+      const { cookies } = await addBook(book);
 
       const listBooksResponse = await request(app.server)
         .get('/books')
@@ -51,40 +65,115 @@ describe('Books routes', () => {
       ]);
     });
 
-    it('should retur status 401 when there is not cookies', async () => {
+    it('should return status 401 when there is not cookies', async () => {
       const listBooksResponse = await request(app.server).get('/books');
 
       expect(listBooksResponse.status).toBe(401);
     });
   });
 
-  it('should be able to get a specific book', async () => {
-    const book = {
-      title: 'Test Book 2',
-      author: 'Test Author 2',
-      genre: 'Test Genre 2',
-    };
+  describe('PUT/books', () => {
+    it('should be able to edit a specific book', async () => {
+      const book = {
+        title: 'Test Book',
+        author: 'Test Author',
+        genre: 'Test Genre',
+      };
 
-    const createBookResponse = await request(app.server)
-      .post('/books')
-      .send(book);
+      const { bookId, cookies } = await addBook(book);
 
-    const cookies = createBookResponse.get('Set-Cookie') ?? [];
+      const editedBook = {
+        genre: 'Coding',
+      }
 
-    const listBooksResponse = await request(app.server)
-      .get('/books')
-      .set('Cookie', cookies)
-      .expect(200);
+      await request(app.server)
+        .put(`/books/${bookId}`)
+        .set('Cookie', cookies)
+        .send(editedBook)
+        .expect(204);
 
-    const bookId = listBooksResponse.body.books[0].id;
+      const getBookResponse = await request(app.server)
+        .get(`/books/${bookId}`)
+        .set('Cookie', cookies)
+        .expect(200);
 
-    const getBookResponse = await request(app.server)
-      .get(`/books/${bookId}`)
-      .set('Cookie', cookies)
-      .expect(200);
+      expect(getBookResponse.body.book).toEqual(expect.objectContaining({
+        ...book,
+        ...editedBook,
+      }));
+    });
 
-    expect(getBookResponse.body.book).toEqual(expect.objectContaining(book));
+    it('should return status 404 when book does not exist', async () => {
+      const book = {
+        title: 'Test Book',
+        author: 'Test Author',
+        genre: 'Test Genre',
+      };
+
+      const { bookId, cookies } = await addBook(book);
+
+      const editedBook = {
+        genre: 'Coding',
+      }
+
+      // delete book
+      await request(app.server)
+        .delete(`/books/${bookId}`)
+        .set('Cookie', cookies)
+        .expect(204);
+
+      const updateBookResponse = await request(app.server)
+        .put(`/books/${bookId}`)
+        .set('Cookie', cookies)
+        .send(editedBook);
+
+      expect(updateBookResponse.status).toBe(404);
+    });
   });
-  it.todo('should be able to edit a specific book', () => {});
-  it.todo('should be able to delete a specific book', () => {});
+
+  describe('DELETE/books', () => {
+    it('should be able to delete a specific book', async () => {
+      const book = {
+        title: 'Test Book',
+        author: 'Test Author',
+        genre: 'Test Genre',
+      };
+
+      const { bookId, cookies } = await addBook(book);
+
+      await request(app.server)
+        .delete(`/books/${bookId}`)
+        .set('Cookie', cookies)
+        .expect(204);
+
+      const getBookResponse = await request(app.server)
+        .get(`/books/${bookId}`)
+        .set('Cookie', cookies)
+        .expect(200);
+
+      expect(getBookResponse.body).toEqual({});
+    });
+
+    it('should return status 404 when book does not exist', async () => {
+      const book = {
+        title: 'Test Book',
+        author: 'Test Author',
+        genre: 'Test Genre',
+      };
+
+      const { bookId, cookies } = await addBook(book);
+
+      // delete book
+      await request(app.server)
+        .delete(`/books/${bookId}`)
+        .set('Cookie', cookies)
+        .expect(204);
+
+      const deleteBookResponse = await request(app.server)
+        .delete(`/books/${bookId}`)
+        .set('Cookie', cookies);
+
+      expect(deleteBookResponse.status).toBe(404);
+    });
+  })
 });

@@ -24,7 +24,7 @@ export async function booksRouter(app: FastifyInstance) {
     },
     async (request) => {
       const { sessionId } = request.cookies;
-      return booksService.getAll(sessionId!);
+      return { books: await booksService.getAll(sessionId!) };
     },
   );
 
@@ -35,7 +35,7 @@ export async function booksRouter(app: FastifyInstance) {
     },
     async (request) => {
       const { sessionId } = request.cookies;
-      return booksService.getOne(request, sessionId!);
+      return { book: await booksService.getOne(request, sessionId!) };
     },
   );
 
