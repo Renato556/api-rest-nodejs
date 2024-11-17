@@ -39,5 +39,35 @@ export const booksService = {
       genre,
       session_id: sessionId as string,
     });
-  }
+  },
+
+  async updateBook(request: FastifyRequest, sessionId: string) {
+    const book = await this.getOne(request, sessionId);
+    if (!book) {
+      throw new Error('Book not found');
+    }
+
+    const updateBookBodySchema = z.object({
+      title: z.string().optional(),
+      genre: z.string().optional(),
+      author: z.string().optional(),
+    });
+
+    const { title, genre, author } = updateBookBodySchema.parse(request.body);
+
+    await knex('books')
+      .update({ title, genre, author })
+      .where(book);
+  },
+
+  async deleteBook(request: FastifyRequest, sessionId: string) {
+    const book = await this.getOne(request, sessionId);
+    if (!book) {
+      throw new Error('Book not found');
+    }
+
+    await knex('books')
+      .where(book)
+      .del();
+  },
 };

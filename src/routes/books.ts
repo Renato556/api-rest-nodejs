@@ -1,5 +1,4 @@
 import { FastifyInstance } from 'fastify';
-import { randomUUID } from 'crypto';
 import { checkSessionId } from '../middlewares/check-session-id';
 
 import { booksService } from '../services/booksService';
@@ -57,8 +56,15 @@ export async function booksRouter(app: FastifyInstance) {
     {
       preHandler: [checkSessionId],
     },
-    async () => {
-      // Implement PUT route for updating a book
+    async (request, reply) => {
+      const { sessionId } = request.cookies;
+
+      try {
+        await booksService.updateBook(request, sessionId!);
+        return reply.status(204).send();
+      } catch (e) {
+        return reply.status(404).send((e as Error).message);
+      }
     },
   );
 
@@ -67,8 +73,15 @@ export async function booksRouter(app: FastifyInstance) {
     {
       preHandler: [checkSessionId],
     },
-    async () => {
-      // Implement DELETE route for deleting a book
+    async (request, reply) => {
+      const { sessionId } = request.cookies;
+
+      try {
+        await booksService.deleteBook(request, sessionId!);
+        return reply.status(204).send();
+      } catch (e) {
+        return reply.status(404).send((e as Error).message);
+      }
     },
   );
 }
