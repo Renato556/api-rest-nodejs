@@ -59,11 +59,11 @@ export async function booksRouter(app: FastifyInstance) {
   app.post('/', async (request, reply) => {
     const createBookBodySchema = z.object({
       title: z.string(),
-      genrer: z.string(),
+      genre: z.string(),
       author: z.string(),
     });
 
-    const { title, author, genrer } = createBookBodySchema.parse(request.body);
+    const { title, author, genre } = createBookBodySchema.parse(request.body);
 
     let sessionId = request.cookies.sessionId;
 
@@ -79,7 +79,7 @@ export async function booksRouter(app: FastifyInstance) {
       id: randomUUID(),
       title,
       author,
-      genrer,
+      genre,
       session_id: sessionId as string,
     });
 

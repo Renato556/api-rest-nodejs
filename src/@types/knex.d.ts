@@ -7,7 +7,7 @@ declare module 'knex/types/tables' {
       id: string;
       title: string;
       author: string;
-      genrer: string;
+      genre: string;
       created_at: Date;
       session_id?: string;
     };

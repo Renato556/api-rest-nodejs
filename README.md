@@ -13,7 +13,7 @@ Além disso, é necessário escrever **testes** para ambos os endpoints, garanti
 
 1. **Endpoint PUT /livros/:id**: 
     - O endpoint deve permitir a edição de um livro existente.
-    - O corpo da requisição deve conter os dados atualizados do livro (exemplo: título, autor, genrer).
+    - O corpo da requisição deve conter os dados atualizados do livro (exemplo: título, autor, genre).
     - Se o livro não for encontrado, retorne uma resposta adequada (ex: `404 Not Found`).
     - O usuário só poderá editar livros adicionados por ele.
 

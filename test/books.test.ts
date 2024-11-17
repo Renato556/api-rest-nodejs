@@ -21,7 +21,7 @@ describe('Books routes', () => {
     const response = await request(app.server).post('/books').send({
       title: 'Test Book',
       author: 'Test Author',
-      genrer: 'Test Genre',
+      genre: 'Test Genre',
     });
 
     expect(response.status).toBe(201);
@@ -32,7 +32,7 @@ describe('Books routes', () => {
       const book = {
         title: 'Test Book 2',
         author: 'Test Author 2',
-        genrer: 'Test Genre 2',
+        genre: 'Test Genre 2',
       };
 
       const createBookResponse = await request(app.server)
@@ -62,7 +62,7 @@ describe('Books routes', () => {
     const book = {
       title: 'Test Book 2',
       author: 'Test Author 2',
-      genrer: 'Test Genre 2',
+      genre: 'Test Genre 2',
     };
 
     const createBookResponse = await request(app.server)
